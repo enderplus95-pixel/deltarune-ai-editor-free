@@ -1,0 +1,8 @@
+{
+  "name": "deltarune-ai-editor-free",
+  "private": true,
+  "scripts": {
+    "validate": "node tools/validate-project.js",
+    "start": "node tools/validate-project.js"
+  }
+}

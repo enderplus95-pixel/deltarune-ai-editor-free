@@ -1,0 +1,13 @@
+# AI Editor Configuration
+
+- `temperature`: 0.7
+- `output_format`: markdown
+- `safety`: fan-made-content
+- `asset_policy`: original-or-licensed-only
+
+## Editing rules
+
+- Preserve the user's original idea.
+- Request clarification for ambiguous lore conflicts.
+- Keep responses organized and easy to implement.
+- Never copy proprietary game dialogue or assets.

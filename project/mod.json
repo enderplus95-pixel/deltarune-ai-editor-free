@@ -1,0 +1,9 @@
+{
+  "name": "My Deltarune-Inspired Mod",
+  "id": "my_custom_mod",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "A new mod created with Deltarune AI Editor Free.",
+  "entry": "src/main.js",
+  "tags": ["custom", "ai-assisted"]
+}
