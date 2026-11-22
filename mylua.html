@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deltarune: Mamad Chronicles - 3D Weird Route</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.cdnfonts.com/s/63752/DeterminationMonoWeb.ttf');
+        
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #000;
+            color: white;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            perspective: 1000px;
+        }
+
+        .pixel-font {
+            font-family: 'Determination Mono Web', monospace;
+        }
+
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 50;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .typing-cursor::after {
+            content: '▋';
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .battle-menu-item:hover {
+            color: #FFFF00;
+            text-shadow: 2px 2px #FF0000;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #111;
+            overflow: hidden;
+        }
+
+        .char-sprite {
+            image-rendering: pixelated;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+            transition: transform 0.3s ease-out;
+        }
+
+        /* 3D Battle Stage */
+        .battle-stage {
+            transform-style: preserve-3d;
+            transform: rotateX(10deg) scale(1.1);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .battle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 50px;
+            transform-style: preserve-3d;
+        }
+
+        .enemy-side {
+            justify-content: flex-end; 
+        }
+
+        .player-side {
+            justify-content: flex-start; 
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #fff; }
+        
+        .menu-btn {
+            transition: all 0.2s;
+        }
+        .menu-btn:active {
+            transform: translateY(2px);
+            border-bottom-width: 0px;
+        }
+
+        .bell-ring {
+            animation: ring 2s infinite;
+        }
+        @keyframes ring {
+            0% { transform: rotate(0); }
+            10% { transform: rotate(15deg); }
+            20% { transform: rotate(-15deg); }
+            30% { transform: rotate(15deg); }
+            40% { transform: rotate(-15deg); }
+            100% { transform: rotate(0); }
+        }
+
+        .tab-btn {
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active {
+            border-bottom: 2px solid #fbbf24;
+            color: #fbbf24;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Badge Card Styles */
+        .badge-card {
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .badge-card.unlocked {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.1));
+            border-color: #fbbf24;
+        }
+        .badge-card.unlocked:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.3);
+        }
+        .badge-card.locked {
+            background: rgba(30, 30, 30, 0.8);
+            border-color: #374151;
+            filter: grayscale(100%);
+            opacity: 0.6;
+        }
+        .badge-card .lock-icon {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .badge-card.unlocked .lock-icon {
+            display: none;
+        }
+
+        /* Ending Card */
+        .ending-card {
+            transition: all 0.3s;
+            position: relative;
+        }
+        .ending-card.unlocked {
+            border-color: #a855f7;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(88, 28, 135, 0.1));
+        }
+        .ending-card.unlocked:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(168, 85, 247, 0.3);
+        }
+        .ending-card.locked {
+            background: rgba(30, 30, 30, 0.8);
+            border-color: #374151;
+            opacity: 0.5;
+        }
+
+        /* Badge Unlock Animation */
+        @keyframes badgeUnlock {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.3) rotate(10deg); }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+        .badge-unlock-anim {
+            animation: badgeUnlock 0.8s ease-out;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: black;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.5);
+            z-index: 9999;
+            animation: toastIn 0.5s ease-out, toastOut 0.5s ease-in 3.5s forwards;
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        @keyframes toastIn {
+            from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        @keyframes toastOut {
+            to { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+        }
+
+        /* Weird Route Background Animation */
+        @keyframes fire-bg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .weird-bg {
+            background: linear-gradient(45deg, #ff0000, #ff4500, #ff8c00, #ffd700, #ff0000);
+            background-size: 400% 400%;
+            animation: fire-bg 3s ease infinite;
+        }
+        .glitch-text {
+            animation: glitch 1s linear infinite;
+        }
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px,0) skew(0deg); }
+            4%, 60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); }
+        }
+
+        /* Canvas for Fire Effect */
+        #fire-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            filter: blur(4px) contrast(1.5);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.8;
+        }
+
+        /* Attack Animations */
+        @keyframes attackRight {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-100px) scale(1.2); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes attackLeft {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(100px) scale(1.2); }
+            100% { transform: translateX(0); }
+        }
+        
+        .attacking-right {
+            animation: attackRight 0.5s ease-in-out;
+        }
+        .attacking-left {
+            animation: attackLeft 0.5s ease-in-out;
+        }
+
+        /* Immortal Mode Animation */
+        @keyframes immortalGlow {
+            0% { filter: drop-shadow(0 0 10px red); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 50px gold) brightness(2); transform: scale(1.1); }
+            100% { filter: drop-shadow(0 0 10px red); transform: scale(1); }
+        }
+        .immortal-mode {
+            animation: immortalGlow 2s infinite alternate;
+        }
+
+        /* DODGE MECHANIC STYLES */
+        #dodge-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #dodge-track {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 4px dashed rgba(255,255,255,0.3);
+        }
+
+        #dodge-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #ef4444, #991b1b);
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            box-shadow: 0 0 15px #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            z-index: 101;
+        }
+
+        #dodge-btn:active {
+            transform: translate(-50%, -50%) scale(0.9);
+        }
+
+        #dodge-timer-bar {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #dodge-timer-fill {
+            width: 100%;
+            height: 100%;
+            background: #ef4444;
+            transition: width 0.1s linear;
+        }
+
+        #dodge-instruction {
+            position: absolute;
+            top: 15%;
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px black;
+        }
+    </style>
+</head>
+<body class="crt">
+
+    <div id="game-container" class="relative w-full h-full max-w-4xl mx-auto border-x-4 border-gray-800 bg-black overflow-hidden">
+        
+        <!-- Main Menu -->
+        <div id="scene-menu" class="absolute inset-0 flex flex-col items-center justify-center z-10 bg-[#0f0f1a] p-4">
+            
+            <div class="mb-4 text-center relative w-full max-w-3xl flex justify-between items-start">
+                <div class="flex-grow">
+                    <h1 class="text-5xl md:text-7xl font-black text-blue-500 mb-1 pixel-font tracking-tighter animate-pulse">DELTARUNE</h1>
+                    <h2 class="text-xl md:text-2xl text-yellow-400 font-bold">ماجراجویی‌های ممد</h2>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button onclick="openBadgesPage()" class="relative p-2 hover:bg-gray-800 rounded-full transition" title="نشان‌ها و پایان‌ها">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                        </svg>
+                    </button>
+                    <button onclick="toggleNotifications()" class="relative p-2 hover:bg-gray-800 rounded-full transition bell-ring">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <span class="absolute top-0 right-0 block h-3 w-3 rounded-full ring-2 ring-black bg-red-500"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Notification Full Page Overlay -->
+            <div id="notification-panel" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-8 backdrop-blur-md">
+                <div class="w-full max-w-2xl bg-gray-900 border-4 border-yellow-400 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                    <div class="bg-yellow-400 text-black p-4 font-bold text-xl flex justify-between items-center">
+                        <span>📢 تابلو اعلانات مدرسه</span>
+                        <button onclick="toggleNotifications()" class="text-black hover:text-white text-2xl font-bold">✕ بستن</button>
+                    </div>
+                    <div class="p-6 space-y-6 overflow-y-auto">
+                        <div class="bg-gray-800 p-6 rounded-lg border-r-8 border-red-500 shadow-lg transform hover:scale-105 transition">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-3xl">⚠️</span>
+                                <h3 class="text-xl font-bold text-red-400">خبر فوری و مهم!</h3>
+                            </div>
+                            <p class="text-lg text-gray-200 leading-relaxed">این بازی قراره پولی بشه پس سریع بدو بازی کن تا پولی نشده! قیمت نسخه کامل: ۵۰ هزار تومان (شوخی)</p>
+                        </div>
+                        
+                        <div class="bg-gray-800 p-6 rounded-lg border-r-8 border-purple-500 shadow-lg transform hover:scale-105 transition">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-3xl">🔥</span>
+                                <h3 class="text-xl font-bold text-purple-400">آپدیت بزرگ روبیکا</h3>
+                            </div>
+                            <p class="text-lg text-gray-200 mb-4">ایونت روبیکا اضافه شده با نسخه کابوس (بچه سالار)</p>
+                            <div class="flex gap-4">
+                                <button onclick="startGame(5); toggleNotifications()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold shadow-lg border-b-4 border-blue-800 active:border-0 active:translate-y-1">
+                                    ▶️ بازی نسخه معمولی
+                                </button>
+                                <button onclick="startGame(6); toggleNotifications()" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold shadow-lg border-b-4 border-red-800 active:border-0 active:translate-y-1">
+                                    ☠️ بازی نسخه کابوس
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Badges & Endings Full Page -->
+            <div id="badges-page" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-start p-4 md:p-8 backdrop-blur-md overflow-y-auto">
+                <div class="w-full max-w-4xl bg-gray-900 border-4 border-yellow-400 rounded-xl shadow-2xl overflow-hidden flex flex-col">
+                    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 text-black p-4 font-bold text-xl flex justify-between items-center sticky top-0 z-10">
+                        <span>🏆 نشان‌ها و پایان‌ها</span>
+                        <button onclick="closeBadgesPage()" class="text-black hover:text-white text-2xl font-bold">✕ بستن</button>
+                    </div>
+                    
+                    <!-- Stats Bar -->
+                    <div class="bg-gray-800 p-4 flex justify-around border-b border-gray-700">
+                        <div class="text-center">
+                            <p class="text-xs text-gray-400">نشان‌های باز شده</p>
+                            <p class="text-2xl font-bold text-yellow-400"><span id="badges-count">0</span>/<span id="badges-total">0</span></p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-xs text-gray-400">پایان‌های کشف شده</p>
+                            <p class="text-2xl font-bold text-purple-400"><span id="endings-count">0</span>/<span id="endings-total">0</span></p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-xs text-gray-400">پیشرفت کلی</p>
+                            <p class="text-2xl font-bold text-green-400"><span id="progress-percent">0</span>%</p>
+                        </div>
+                    </div>
+
+                    <div class="p-6 space-y-8 overflow-y-auto">
+                        <!-- Badges Section -->
+                        <section>
+                            <h3 class="text-2xl font-bold text-yellow-400 mb-4 flex items-center gap-2">
+                                <span>🏅</span> نشان‌ها (Badges)
+                            </h3>
+                            <div id="badges-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <!-- Badges injected via JS -->
+                            </div>
+                        </section>
+
+                        <!-- Endings Section -->
+                        <section>
+                            <h3 class="text-2xl font-bold text-purple-400 mb-4 flex items-center gap-2">
+                                <span>📖</span> پایان‌ها (Endings)
+                            </h3>
+                            <div id="endings-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Endings injected via JS -->
+                            </div>
+                        </section>
+
+                        <!-- Reset Button -->
+                        <div class="text-center pt-4 border-t border-gray-700">
+                            <button onclick="resetProgress()" class="bg-red-700 hover:bg-red-600 text-white px-6 py-2 rounded font-bold border-b-4 border-red-900 active:border-0 active:translate-y-1">
+                                🗑️ پاک کردن همه پیشرفت‌ها
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabs Navigation -->
+            <div class="w-full max-w-3xl flex justify-center gap-2 mb-6 bg-gray-900 p-2 rounded-lg border border-gray-700">
+                <button onclick="switchTab('all')" id="tab-all" class="tab-btn active flex-1 py-2 rounded font-bold text-sm md:text-base">همه</button>
+                <button onclick="switchTab('normal')" id="tab-normal" class="tab-btn flex-1 py-2 rounded font-bold text-sm md:text-base">معمولی</button>
+                <button onclick="switchTab('nightmare')" id="tab-nightmare" class="tab-btn flex-1 py-2 rounded font-bold text-sm md:text-base">کابوس ها</button>
+                <button onclick="switchTab('event')" id="tab-event" class="tab-btn flex-1 py-2 rounded font-bold text-sm md:text-base">ایونت مخفی</button>
+            </div>
+
+            <!-- Chapters Grid -->
+            <div class="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div data-category="normal" class="chapter-card">
+                    <button onclick="startGame(1)" class="menu-btn bg-blue-600 text-white py-4 rounded font-bold text-lg border-b-4 border-blue-800 shadow-lg w-full flex items-center justify-center gap-2">
+                        <span>1️⃣</span> ناظم مدرسه
+                    </button>
+                </div>
+                <div data-category="normal" class="chapter-card">
+                    <button onclick="startGame(2)" class="menu-btn bg-red-600 text-white py-4 rounded font-bold text-lg border-b-4 border-red-800 shadow-lg w-full flex items-center justify-center gap-2">
+                        <span>2️⃣</span> دزدهای کوچه
+                    </button>
+                </div>
+                <div data-category="nightmare" class="chapter-card">
+                    <button onclick="startGame(3)" class="menu-btn bg-purple-900 text-white py-4 rounded font-bold text-lg border-b-4 border-purple-950 shadow-lg w-full border-l-4 border-l-red-500 flex items-center justify-center gap-2">
+                        <span>⚠️</span> کابوس: معلم
+                    </button>
+                </div>
+                <div data-category="nightmare" class="chapter-card">
+                    <button onclick="startGame(4)" class="menu-btn bg-gray-800 text-white py-4 rounded font-bold text-lg border-b-4 border-black shadow-lg w-full border-r-4 border-r-yellow-500 flex items-center justify-center gap-2">
+                        <span>🤡</span> کابوس: دلقک
+                    </button>
+                </div>
+                
+                <!-- Expired Events (Clickable for info) -->
+                <div data-category="event" class="chapter-card cursor-pointer group" onclick="showExpiredInfo('rubika')">
+                    <div class="bg-gray-700 text-gray-400 py-4 rounded font-bold text-lg border-b-4 border-gray-900 w-full flex flex-col items-center justify-center gap-1 relative overflow-hidden hover:brightness-110 transition">
+                        <div class="absolute inset-0 bg-black/60 flex items-center justify-center z-10 group-hover:bg-black/40 transition">
+                            <span class="text-red-500 font-black text-xl rotate-12 border-4 border-red-500 px-2 py-1 rounded bg-black">تمام شده</span>
+                        </div>
+                        <span class="blur-[2px] group-hover:blur-none transition">📱 ایونت: روبیکا</span>
+                    </div>
+                </div>
+                <div data-category="event" class="chapter-card cursor-pointer group" onclick="showExpiredInfo('salar')">
+                    <div class="bg-gray-700 text-gray-400 py-4 rounded font-bold text-lg border-b-4 border-gray-900 w-full flex flex-col items-center justify-center gap-1 relative overflow-hidden hover:brightness-110 transition">
+                        <div class="absolute inset-0 bg-black/60 flex items-center justify-center z-10 group-hover:bg-black/40 transition">
+                            <span class="text-red-500 font-black text-xl rotate-12 border-4 border-red-500 px-2 py-1 rounded bg-black">تمام شده</span>
+                        </div>
+                        <span class="blur-[2px] group-hover:blur-none transition">👹 کابوس: بچه سالار</span>
+                    </div>
+                </div>
+
+                <!-- NEW WEIRD ROUTE -->
+                <div data-category="normal" class="chapter-card col-span-1 md:col-span-2">
+                    <button onclick="startGame(7)" class="menu-btn weird-bg text-black py-6 rounded font-black text-2xl border-b-4 border-red-900 shadow-[0_0_30px_rgba(255,0,0,0.6)] w-full flex flex-col items-center justify-center gap-2 glitch-text hover:scale-105 transition-transform">
+                        <span class="text-4xl">🔥</span> 
+                        <span>WEIRD ROUTE</span>
+                        <span class="text-sm font-bold bg-black/30 px-2 rounded">مسیر عجیب - ممد و مدیر</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Customization & Donate -->
+            <div class="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-gray-900 p-4 rounded-lg border border-gray-700 flex flex-col justify-center">
+                    <h3 class="text-center text-gray-300 font-bold mb-3 border-b border-gray-700 pb-2 text-sm">🎨 شخصی سازی تیم</h3>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs text-gray-400">ممد:</label>
+                            <input type="color" id="color-mamad" value="#2563EB" class="w-10 h-6 cursor-pointer rounded bg-transparent border-0" onchange="updateColors()">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs text-gray-400">اصغر:</label>
+                            <input type="color" id="color-asghar" value="#7C3AED" class="w-10 h-6 cursor-pointer rounded bg-transparent border-0" onchange="updateColors()">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs text-gray-400">غلام:</label>
+                            <input type="color" id="color-gholam" value="#15803D" class="w-10 h-6 cursor-pointer rounded bg-transparent border-0" onchange="updateColors()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-yellow-900 to-gray-900 p-4 rounded-lg border border-yellow-600 flex flex-col justify-center">
+                    <h3 class="text-center text-yellow-400 font-bold mb-2 text-sm">💰 حمایت مالی از سازنده</h3>
+                    <p class="text-xs text-center text-gray-300 mb-3">برای خرید سرور و کتلت بیشتر!</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="bg-green-700 hover:bg-green-600 text-white text-xs py-1 rounded border-b-2 border-green-900">10 تومن</button>
+                        <button class="bg-green-700 hover:bg-green-600 text-white text-xs py-1 rounded border-b-2 border-green-900">50 تومن</button>
+                        <button class="bg-green-700 hover:bg-green-600 text-white text-xs py-1 rounded border-b-2 border-green-900">100 تومن</button>
+                        <button class="bg-green-700 hover:bg-green-600 text-white text-xs py-1 rounded border-b-2 border-green-900 col-span-3">1 میلیون تومن 😂</button>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="mt-4 text-gray-600 text-xs">Made with ❤️ for Mamad</p>
+        </div>
+
+        <!-- Scene 2: Dialogue System -->
+        <div id="scene-dialogue" class="hidden absolute inset-0 flex flex-col justify-end pb-10 px-4 z-20 bg-[#0f0f1a]">
+            <div id="dialogue-bg" class="absolute inset-0 opacity-30 pointer-events-none"></div>
+            <div id="characters-stage" class="flex-grow flex justify-center items-end space-x-10 space-x-reverse mb-4 relative z-10"></div>
+            <div class="w-full max-w-3xl mx-auto bg-black border-4 border-white p-6 rounded-lg min-h-[180px] relative shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                <div id="speaker-name" class="absolute -top-5 right-8 bg-yellow-400 text-black px-4 py-1 font-bold rounded text-xl hidden border-2 border-white">???</div>
+                <p id="dialogue-text" class="text-2xl leading-relaxed typing-cursor pixel-font text-white"></p>
+                <button onclick="skipDialogue()" class="absolute bottom-3 right-3 text-xs bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded border border-gray-600">
+                    SKIP ⏩
+                </button>
+                <div class="absolute bottom-3 left-3 animate-bounce text-white text-sm">▼</div>
+            </div>
+        </div>
+
+        <!-- Scene 3: Battle System (3D) -->
+        <div id="scene-battle" class="hidden absolute inset-0 flex flex-col items-center justify-center z-30 bg-[#050510]">
+            <div id="battle-bg" class="absolute inset-0 opacity-40"></div>
+            <canvas id="fire-canvas" class="hidden absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
+            
+            <!-- 3D Stage Container -->
+            <div class="battle-stage">
+                <!-- Enemy Row (Left Side) -->
+                <div class="battle-row enemy-side h-1/2 items-end pb-10">
+                    <div id="enemy-container" class="flex gap-10 relative z-10"></div>
+                </div>
+
+                <!-- Player Row (Right Side) -->
+                <div class="battle-row player-side h-1/2 items-start pt-10">
+                     <div class="flex justify-between w-full max-w-3xl px-8 bg-black/50 p-4 rounded-lg border border-gray-700 backdrop-blur-sm z-10">
+                        <div class="text-right w-1/3">
+                            <p class="font-bold text-blue-400 text-lg">MAMAD</p>
+                            <div class="w-full h-3 bg-gray-600 mt-1"><div id="mamad-hp-bar" class="h-full bg-yellow-400 w-[100%] transition-all"></div></div>
+                            <p class="text-xs mt-1">HP <span id="mamad-hp-text">120</span>/120</p>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <p class="font-bold text-purple-400 text-lg">ASGHAR</p>
+                            <div class="w-full h-3 bg-gray-600 mt-1"><div class="h-full bg-yellow-400 w-[100%]"></div></div>
+                            <p class="text-xs mt-1">HP 100/100</p>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <p class="font-bold text-green-400 text-lg">GHOLAM</p>
+                            <div class="w-full h-3 bg-gray-600 mt-1"><div class="h-full bg-yellow-400 w-[100%]"></div></div>
+                            <p class="text-xs mt-1">HP 80/80</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="battle-ui" class="absolute bottom-4 w-full max-w-3xl bg-black border-4 border-white p-2 rounded-lg grid grid-cols-4 gap-2 h-32 z-10 shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+                <button onclick="selectAction('FIGHT')" class="battle-menu-item text-xl font-bold text-white flex items-center justify-center border-r-2 border-gray-700">⚔️ جنگیدن</button>
+                <button onclick="selectAction('ACT')" class="battle-menu-item text-xl font-bold text-white flex items-center justify-center border-r-2 border-gray-700">🎭 اکت کردن</button>
+                <button onclick="selectAction('ITEM')" class="battle-menu-item text-xl font-bold text-white flex items-center justify-center border-r-2 border-gray-700">🎒 آیتم</button>
+                <button onclick="selectAction('MERCY')" class="battle-menu-item text-xl font-bold text-white flex items-center justify-center">🕊️ رحم کردن</button>
+            </div>
+
+            <button id="hacker-btn" onclick="activateHackerMode()" class="hidden absolute top-4 right-4 bg-green-600 text-black font-bold px-4 py-2 rounded border-2 border-green-400 animate-pulse z-50">
+                💻 HACK MODE (<span id="hack-count">3</span>)
+            </button>
+
+            <div id="sub-menu" class="hidden absolute bottom-40 left-0 w-full max-w-3xl bg-black border-4 border-yellow-400 p-4 h-40 z-40 overflow-y-auto mx-auto left-0 right-0">
+                <ul id="sub-menu-list" class="space-y-3 text-xl font-bold text-white"></ul>
+            </div>
+
+            <div id="battle-text" class="absolute top-20 text-3xl text-white font-bold drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] hidden z-20 bg-black/60 px-4 py-2 rounded"></div>
+        </div>
+
+        <!-- Dodge Mini-Game Overlay -->
+        <div id="dodge-overlay">
+            <div id="dodge-instruction">دکمه قرمز رو بزن تا جاخالی بدی!</div>
+            <div id="dodge-track">
+                <div id="dodge-btn">⚡</div>
+            </div>
+            <div id="dodge-timer-bar">
+                <div id="dodge-timer-fill"></div>
+            </div>
+        </div>
+
+        <!-- Victory Screen -->
+        <div id="scene-victory" class="hidden absolute inset-0 flex flex-col items-center justify-center z-50 bg-black overflow-y-auto p-4">
+            <h1 class="text-5xl md:text-6xl text-yellow-400 font-black mb-4 pixel-font animate-bounce">YOU WON!</h1>
+            <p id="victory-text" class="text-2xl mb-2 text-center">قهرمان شدی!</p>
+            <p id="ending-name" class="text-xl text-purple-400 font-bold mb-4 text-center"></p>
+            <p class="text-xl text-gray-400 mb-4">EXP gained: 999 | GOLD gained: 100000 Tomans</p>
+            <div id="new-badges-earned" class="mb-4 w-full max-w-md"></div>
+            <button onclick="location.reload()" class="bg-white text-black px-8 py-3 rounded font-bold hover:bg-gray-200 border-b-4 border-gray-400 active:border-0">بازی دوباره</button>
+        </div>
+
+        <!-- Info Modal for Expired Events -->
+        <div id="info-modal" class="hidden fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4 backdrop-blur-md">
+            <div class="bg-gray-900 border-2 border-red-500 rounded-xl p-6 max-w-md w-full text-center relative">
+                <button onclick="document.getElementById('info-modal').classList.add('hidden')" class="absolute top-2 right-2 text-gray-400 hover:text-white text-xl">✕</button>
+                <h3 id="info-title" class="text-2xl font-bold text-red-500 mb-4"></h3>
+                <p id="info-desc" class="text-gray-300 mb-6"></p>
+                <button onclick="document.getElementById('info-modal').classList.add('hidden')" class="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded font-bold">فهمیدم</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // BADGES & ENDINGS SYSTEM
+        // ============================================
+        
+        const BADGES = [
+            { id: 'first_win', name: 'اولین پیروزی', icon: '🏆', desc: 'اولین بار دشمن رو شکست بده', color: 'yellow' },
+            { id: 'nazem_slayer', name: 'ناظم کش', icon: '📏', desc: 'ناظم مدرسه رو شکست بده', color: 'blue' },
+            { id: 'thief_hunter', name: 'شکارچی دزدها', icon: '🦹', desc: 'دزدهای کوچه رو شکست بده', color: 'red' },
+            { id: 'kotlet_master', name: 'کتلت باز', icon: '🍖', desc: 'با کتلت دشمن رو شکست بده', color: 'orange' },
+            { id: 'hacker', name: 'هکر کلاه سبز', icon: '💻', desc: 'از HACK MODE استفاده کن', color: 'green' },
+            { id: 'pacifist', name: 'صلح‌طلب', icon: '🕊️', desc: 'بدون کشتن دشمن پیروز شو', color: 'cyan' },
+            { id: 'ruthless', name: 'بی‌رحم', icon: '💀', desc: 'همه دشمنان رو بکش', color: 'red' },
+            { id: 'nightmare_breaker', name: 'کابوس شکن', icon: '🌙', desc: 'معلم کابوس رو شکست بده', color: 'purple' },
+            { id: 'clown_slayer', name: 'دلقک کش', icon: '🤡', desc: 'دلقک کابوس رو شکست بده', color: 'yellow' },
+            { id: 'bache_salar_killer', name: 'بچه سالار شکن', icon: '👹', desc: 'بچه سالار رو شکست بده', color: 'red' },
+            { id: 'rubika_user', name: 'روبیکاباز', icon: '📱', desc: 'ایونت روبیکا رو تموم کن', color: 'pink' },
+            { id: 'weird_survivor', name: 'نجات یافته عجیب', icon: '🔥', desc: 'از مسیر عجیب زنده بیرون بیا', color: 'red' },
+            { id: 'full_completion', name: 'کامل‌کار', icon: '👑', desc: 'همه پایان‌ها رو باز کن', color: 'gold' }
+        ];
+
+        const ENDINGS = [
+            { id: 'normal_nazem', name: 'پایان معمولی: ناظم', icon: '📏', desc: 'ناظم رو با جنگ شکست دادی. ممد و بچه‌ها از مدرسه فرار کردن و رفتن کباب خوردن!', chapter: 1, type: 'normal' },
+            { id: 'normal_thieves', name: 'پایان معمولی: دزدها', icon: '🦹', desc: 'دزدها فرار کردن! ممد پولشون رو پیدا کرد و باهاش کتلت خرید.', chapter: 2, type: 'normal' },
+            { id: 'pacifist_ending', name: 'پایان صلح‌طلبانه', icon: '🕊️', desc: 'تو بدون خونریزی پیروز شدی! ممد با همه دوست شد و یه پارتی بزرگ گرفتن.', chapter: -1, type: 'pacifist' },
+            { id: 'genocide_ending', name: 'پایان نسل‌کشی', icon: '💀', desc: 'تو بی‌رحم بودی! همه دشمنان نابود شدن. ممد الان پادشاه تاریکیه!', chapter: -1, type: 'genocide' },
+            { id: 'nightmare_teacher', name: 'پایان کابوس: معلم', icon: '🌙', desc: 'معلم کابوس رو شکست دادی! تکالیف برای همیشه نابود شدن!', chapter: 3, type: 'nightmare' },
+            { id: 'nightmare_clown', name: 'پایان کابوس: دلقک', icon: '🤡', desc: 'دلقک کابوس رو شکست دادی! سیرک متروکه دیگه ترسناک نیست.', chapter: 4, type: 'nightmare' },
+            { id: 'rubika_normal', name: 'پایان روبیکا: معمولی', icon: '📱', desc: 'ادمین روبیکا بلاک شد! ممد ادمین جدید گروه شد.', chapter: 5, type: 'event' },
+            { id: 'rubika_nightmare', name: 'پایان روبیکا: بچه سالار', icon: '👹', desc: 'بچه سالار اخراج شد! ممد حالا ادمین کل روبیکاست!', chapter: 6, type: 'event' },
+            { id: 'hacker_ending', name: 'پایان مخفی: هکر', icon: '💻', desc: 'تو سیستم رو هک کردی! ممد الان صاحب کل بازیه! 😂', chapter: -1, type: 'secret' },
+            { id: 'weird_ending', name: 'پایان عجیب: تنهایی', icon: '🔥', desc: 'ممد تنها در میان شعله‌ها ایستاد. هیچکس نتوانست جلوش رو بگیره.', chapter: 7, type: 'weird' }
+        ];
+
+        let gameProgress = {
+            unlockedBadges: [],
+            unlockedEndings: [],
+            stats: { totalWins: 0, kotletKills: 0, hackUses: 0, mercyWins: 0, killCount: 0 }
+        };
+
+        function loadProgress() {
+            const saved = localStorage.getItem('mamadGameProgress');
+            if (saved) {
+                try {
+                    gameProgress = JSON.parse(saved);
+                    if (!gameProgress.stats) gameProgress.stats = { totalWins: 0, kotletKills: 0, hackUses: 0, mercyWins: 0, killCount: 0 };
+                } catch(e) { console.error('Error loading progress'); }
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('mamadGameProgress', JSON.stringify(gameProgress));
+        }
+
+        function unlockBadge(badgeId) {
+            if (!gameProgress.unlockedBadges.includes(badgeId)) {
+                gameProgress.unlockedBadges.push(badgeId);
+                saveProgress();
+                const badge = BADGES.find(b => b.id === badgeId);
+                if (badge) showToast(`🏅 نشان جدید: ${badge.name}`);
+                return true;
+            }
+            return false;
+        }
+
+        function unlockEnding(endingId) {
+            if (!gameProgress.unlockedEndings.includes(endingId)) {
+                gameProgress.unlockedEndings.push(endingId);
+                saveProgress();
+                const ending = ENDINGS.find(e => e.id === endingId);
+                if (ending) showToast(`📖 پایان جدید: ${ending.name}`);
+                return true;
+            }
+            return false;
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function resetProgress() {
+            if (confirm('مطمئنی میخوای همه پیشرفت‌ها پاک بشه؟')) {
+                gameProgress = { unlockedBadges: [], unlockedEndings: [], stats: { totalWins: 0, kotletKills: 0, hackUses: 0, mercyWins: 0, killCount: 0 } };
+                saveProgress();
+                renderBadgesPage();
+                showToast('🗑️ همه پیشرفت‌ها پاک شد!');
+            }
+        }
+
+        function openBadgesPage() {
+            renderBadgesPage();
+            document.getElementById('badges-page').classList.remove('hidden');
+        }
+
+        function closeBadgesPage() {
+            document.getElementById('badges-page').classList.add('hidden');
+        }
+
+        function renderBadgesPage() {
+            document.getElementById('badges-count').textContent = gameProgress.unlockedBadges.length;
+            document.getElementById('badges-total').textContent = BADGES.length;
+            document.getElementById('endings-count').textContent = gameProgress.unlockedEndings.length;
+            document.getElementById('endings-total').textContent = ENDINGS.length;
+            
+            const total = BADGES.length + ENDINGS.length;
+            const unlocked = gameProgress.unlockedBadges.length + gameProgress.unlockedEndings.length;
+            const percent = Math.floor((unlocked / total) * 100);
+            document.getElementById('progress-percent').textContent = percent;
+
+            const badgesGrid = document.getElementById('badges-grid');
+            badgesGrid.innerHTML = '';
+            BADGES.forEach(badge => {
+                const unlocked = gameProgress.unlockedBadges.includes(badge.id);
+                const card = document.createElement('div');
+                card.className = `badge-card ${unlocked ? 'unlocked' : 'locked'} border-2 rounded-lg p-4 text-center`;
+                card.innerHTML = `
+                    <div class="lock-icon">🔒</div>
+                    <div class="text-5xl mb-2 ${unlocked ? 'badge-unlock-anim' : ''}">${unlocked ? badge.icon : '❓'}</div>
+                    <h4 class="font-bold text-sm mb-1 ${unlocked ? 'text-yellow-300' : 'text-gray-500'}">${unlocked ? badge.name : '???'}</h4>
+                    <p class="text-xs ${unlocked ? 'text-gray-300' : 'text-gray-600'}">${unlocked ? badge.desc : 'هنوز باز نشده'}</p>
+                `;
+                badgesGrid.appendChild(card);
+            });
+
+            const endingsGrid = document.getElementById('endings-grid');
+            endingsGrid.innerHTML = '';
+            ENDINGS.forEach(ending => {
+                const unlocked = gameProgress.unlockedEndings.includes(ending.id);
+                const card = document.createElement('div');
+                card.className = `ending-card ${unlocked ? 'unlocked' : 'locked'} border-2 rounded-lg p-4`;
+                card.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="text-4xl ${unlocked ? '' : 'grayscale opacity-50'}">${unlocked ? ending.icon : '🔒'}</div>
+                        <div class="flex-grow">
+                            <h4 class="font-bold text-base mb-1 ${unlocked ? 'text-purple-300' : 'text-gray-500'}">${unlocked ? ending.name : 'پایان ناشناخته'}</h4>
+                            <p class="text-xs ${unlocked ? 'text-gray-300' : 'text-gray-600'}">${unlocked ? ending.desc : 'این پایان هنوز کشف نشده...'}</p>
+                        </div>
+                    </div>
+                `;
+                endingsGrid.appendChild(card);
+            });
+        }
+
+        function handleVictoryRewards(extraData = {}) {
+            const newBadges = [];
+            const newEndings = [];
+
+            if (unlockBadge('first_win')) newBadges.push('first_win');
+
+            if (currentChapter === 1) {
+                if (unlockBadge('nazem_slayer')) newBadges.push('nazem_slayer');
+                if (unlockEnding('normal_nazem')) newEndings.push('normal_nazem');
+            } else if (currentChapter === 2) {
+                if (unlockBadge('thief_hunter')) newBadges.push('thief_hunter');
+                if (unlockEnding('normal_thieves')) newEndings.push('normal_thieves');
+            } else if (currentChapter === 3) {
+                if (unlockBadge('nightmare_breaker')) newBadges.push('nightmare_breaker');
+                if (unlockEnding('nightmare_teacher')) newEndings.push('nightmare_teacher');
+            } else if (currentChapter === 4) {
+                if (unlockBadge('clown_slayer')) newBadges.push('clown_slayer');
+                if (unlockEnding('nightmare_clown')) newEndings.push('nightmare_clown');
+            } else if (currentChapter === 5) {
+                if (unlockBadge('rubika_user')) newBadges.push('rubika_user');
+                if (unlockEnding('rubika_normal')) newEndings.push('rubika_normal');
+            } else if (currentChapter === 6) {
+                if (unlockBadge('bache_salar_killer')) newBadges.push('bache_salar_killer');
+                if (unlockEnding('rubika_nightmare')) newEndings.push('rubika_nightmare');
+            } else if (currentChapter === 7) {
+                if (unlockBadge('weird_survivor')) newBadges.push('weird_survivor');
+                if (unlockEnding('weird_ending')) newEndings.push('weird_ending');
+            }
+
+            if (extraData.usedKotlet && extraData.killedWithKotlet) {
+                if (unlockBadge('kotlet_master')) newBadges.push('kotlet_master');
+            }
+            if (extraData.usedHack) {
+                if (unlockBadge('hacker')) newBadges.push('hacker');
+                if (unlockEnding('hacker_ending')) newEndings.push('hacker_ending');
+            }
+            if (extraData.usedMercy && !extraData.killedAny) {
+                if (unlockBadge('pacifist')) newBadges.push('pacifist');
+                if (unlockEnding('pacifist_ending')) newEndings.push('pacifist_ending');
+            }
+            if (extraData.killedAll) {
+                if (unlockBadge('ruthless')) newBadges.push('ruthless');
+                if (unlockEnding('genocide_ending')) newEndings.push('genocide_ending');
+            }
+
+            if (gameProgress.unlockedEndings.length >= ENDINGS.length - 1) {
+                if (unlockBadge('full_completion')) newBadges.push('full_completion');
+            }
+
+            gameProgress.stats.totalWins++;
+            saveProgress();
+            return { newBadges, newEndings };
+        }
+
+        function showNewRewards(rewards) {
+            const container = document.getElementById('new-badges-earned');
+            container.innerHTML = '';
+            if (rewards.newBadges.length === 0 && rewards.newEndings.length === 0) return;
+
+            let html = '<div class="bg-gray-900 border-2 border-yellow-400 rounded-lg p-4">';
+            html += '<h3 class="text-xl font-bold text-yellow-400 mb-3 text-center">🎉 جوایز جدید!</h3>';
+            
+            if (rewards.newBadges.length > 0) {
+                html += '<div class="mb-3"><p class="text-sm text-gray-400 mb-2">نشان‌های جدید:</p><div class="flex flex-wrap gap-2 justify-center">';
+                rewards.newBadges.forEach(id => {
+                    const badge = BADGES.find(b => b.id === id);
+                    if (badge) html += `<div class="bg-yellow-900/50 border border-yellow-500 rounded px-3 py-1 text-sm badge-unlock-anim">${badge.icon} ${badge.name}</div>`;
+                });
+                html += '</div></div>';
+            }
+
+            if (rewards.newEndings.length > 0) {
+                html += '<div><p class="text-sm text-gray-400 mb-2">پایان‌های جدید:</p><div class="flex flex-wrap gap-2 justify-center">';
+                rewards.newEndings.forEach(id => {
+                    const ending = ENDINGS.find(e => e.id === id);
+                    if (ending) html += `<div class="bg-purple-900/50 border border-purple-500 rounded px-3 py-1 text-sm badge-unlock-anim">${ending.icon} ${ending.name}</div>`;
+                });
+                html += '</div></div>';
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // ============================================
+        // GAME LOGIC
+        // ============================================
+
+        let customColors = { mamad: '#2563EB', asghar: '#7C3AED', gholam: '#15803D' };
+        function updateColors() {
+            customColors.mamad = document.getElementById('color-mamad').value;
+            customColors.asghar = document.getElementById('color-asghar').value;
+            customColors.gholam = document.getElementById('color-gholam').value;
+        }
+
+        function toggleNotifications() {
+            document.getElementById('notification-panel').classList.toggle('hidden');
+        }
+
+        function switchTab(category) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${category}`).classList.add('active');
+            const cards = document.querySelectorAll('.chapter-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function showExpiredInfo(type) {
+            const modal = document.getElementById('info-modal');
+            const title = document.getElementById('info-title');
+            const desc = document.getElementById('info-desc');
+            
+            if (type === 'rubika') {
+                title.textContent = "📱 ایونت روبیکا";
+                desc.textContent = "این ایونت مربوط به جنگ با ادمین‌های فضایی روبیکا بود. متاسفانه سرورهای ما آتش گرفت و این ایونت برای همیشه بسته شد. شاید روزی برگرده...";
+            } else if (type === 'salar') {
+                title.textContent = "👹 بچه سالار";
+                desc.textContent = "بچه سالار بالاخره توسط ممد اخراج شد و دیگه برنگشت. پرونده این هیولا بسته شد. اگر دلتنگش شدی، گریه نکن!";
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function getAssets() {
+            return {
+                mamad: `<svg viewBox="0 0 200 200" class="w-48 h-48 drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]"><rect x="60" y="80" width="80" height="100" fill="${customColors.mamad}" rx="5" /><circle cx="100" cy="60" r="40" fill="#FCA5A5" /><path d="M60 60 Q100 10 140 60" fill="#1F2937" /><circle cx="85" cy="60" r="5" fill="black" /><circle cx="115" cy="60" r="5" fill="black" /><path d="M90 80 Q100 90 110 80" stroke="black" stroke-width="3" fill="none" /><rect x="40" y="90" width="20" height="60" fill="#FCA5A5" rx="5" transform="rotate(20 40 90)" /><rect x="140" y="90" width="20" height="60" fill="#FCA5A5" rx="5" transform="rotate(-20 140 90)" /><text x="100" y="190" text-anchor="middle" fill="white" font-family="monospace" font-size="14">MAMAD</text></svg>`,
+                asghar: `<svg viewBox="0 0 200 200" class="w-48 h-48 drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]"><rect x="60" y="80" width="80" height="100" fill="${customColors.asghar}" rx="5" /><circle cx="100" cy="60" r="40" fill="#FCA5A5" /><path d="M60 60 Q100 10 140 60" fill="#1F2937" /><circle cx="85" cy="60" r="5" fill="black" /><circle cx="115" cy="60" r="5" fill="black" /><path d="M90 80 Q100 90 110 80" stroke="black" stroke-width="3" fill="none" /><rect x="40" y="90" width="20" height="60" fill="#FCA5A5" rx="5" transform="rotate(20 40 90)" /><rect x="140" y="90" width="20" height="60" fill="#FCA5A5" rx="5" transform="rotate(-20 140 90)" /><text x="100" y="190" text-anchor="middle" fill="white" font-family="monospace" font-size="14">ASGHAR</text></svg>`,
+                gholam: `<svg viewBox="0 0 200 200" class="w-48 h-48 drop-shadow-[0_0_15px_rgba(34,197,94,0.8)]"><rect x="60" y="80" width="80" height="100" fill="${customColors.gholam}" rx="5" /><circle cx="100" cy="60" r="40" fill="#FCA5A5" /><path d="M60 60 Q100 10 140 60" fill="#1F2937" /><circle cx="85" cy="60" r="5" fill="black" /><circle cx="115" cy="60" r="5" fill="black" /><path d="M90 80 Q100 90 110 80" stroke="black" stroke-width="3" fill="none" /><rect x="40" y="90" width="20" height="60" fill="#FCA5A5" rx="5" transform="rotate(20 40 90)" /><rect x="140" y="90" width="20" height="60" fill="#FCA5A5" rx="5" transform="rotate(-20 140 90)" /><text x="100" y="190" text-anchor="middle" fill="white" font-family="monospace" font-size="14">GHOLAM</text></svg>`,
+                nazem: `<svg viewBox="0 0 200 200" class="w-64 h-64 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"><path d="M50 180 L150 180 L140 80 L60 80 Z" fill="#1F2937" /><path d="M100 80 L110 120 L100 140 L90 120 Z" fill="#DC2626" /><rect x="70" y="30" width="60" height="60" fill="#FCA5A5" rx="5" /><rect x="75" y="50" width="20" height="15" fill="white" stroke="black" stroke-width="2" /><rect x="105" y="50" width="20" height="15" fill="white" stroke="black" stroke-width="2" /><line x1="95" y1="57" x2="105" y2="57" stroke="black" stroke-width="2" /><path d="M75 45 L90 50" stroke="black" stroke-width="3" /><path d="M125 45 L110 50" stroke="black" stroke-width="3" /><path d="M85 75 Q100 65 115 75" stroke="black" stroke-width="3" fill="none" /><rect x="140" y="60" width="10" height="80" fill="#FCD34D" stroke="black" /><text x="100" y="195" text-anchor="middle" fill="white" font-family="monospace" font-size="14">NAZEM</text></svg>`,
+                moallem: `<svg viewBox="0 0 200 200" class="w-72 h-72 drop-shadow-[0_0_30px_rgba(255,0,0,1)] animate-pulse"><circle cx="100" cy="100" r="90" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="10,5" class="animate-spin" style="animation-duration: 10s;" /><path d="M40 180 L160 180 L150 70 L50 70 Z" fill="#000" /><path d="M100 70 L115 130 L100 150 L85 130 Z" fill="#991b1b" /><rect x="60" y="20" width="80" height="60" fill="#FCA5A5" rx="5" /><rect x="65" y="40" width="25" height="15" fill="black" stroke="red" /><rect x="110" y="40" width="25" height="15" fill="black" stroke="red" /><circle cx="77" cy="47" r="2" fill="red" /><circle cx="122" cy="47" r="2" fill="red" /><path d="M80 70 Q100 80 120 70" stroke="black" stroke-width="3" fill="none" /><text x="100" y="195" text-anchor="middle" fill="red" font-family="monospace" font-size="14" font-weight="bold">MOALLEM</text></svg>`,
+                clown: `<svg viewBox="0 0 200 200" class="w-64 h-64 drop-shadow-[0_0_25px_rgba(255,255,0,0.6)]"><path d="M50 180 L150 180 L140 90 L60 90 Z" fill="#4C1D95" /><circle cx="100" cy="60" r="45" fill="white" stroke="#a1a1aa" stroke-width="2" /><circle cx="60" cy="40" r="10" fill="#ef4444" /><circle cx="140" cy="40" r="10" fill="#ef4444" /><circle cx="100" cy="20" r="10" fill="#ef4444" /><circle cx="85" cy="55" r="5" fill="black" /><circle cx="115" cy="55" r="5" fill="black" /><circle cx="100" cy="70" r="8" fill="#ef4444" /><path d="M80 85 Q100 100 120 85" stroke="#be123c" stroke-width="4" fill="none" /><text x="100" y="195" text-anchor="middle" fill="#facc15" font-family="monospace" font-size="14" font-weight="bold">DOLOKE KABUS</text></svg>`,
+                dozd: `<svg viewBox="0 0 200 200" class="w-48 h-48 drop-shadow-[0_0_15px_rgba(100,100,100,0.8)]"><rect x="60" y="90" width="80" height="90" fill="#374151" rx="5" /><circle cx="100" cy="60" r="40" fill="#1F2937" /><circle cx="85" cy="60" r="8" fill="white" /><circle cx="85" cy="60" r="3" fill="black" /><circle cx="115" cy="60" r="8" fill="white" /><circle cx="115" cy="60" r="3" fill="black" /><circle cx="150" cy="120" r="20" fill="#FCD34D" stroke="black" /><text x="150" y="125" text-anchor="middle" font-size="20">$</text><text x="100" y="190" text-anchor="middle" fill="white" font-family="monospace" font-size="14">DOZD</text></svg>`,
+                modir: `<svg viewBox="0 0 200 200" class="w-72 h-72 drop-shadow-[0_0_40px_rgba(255,0,0,1)] animate-pulse">
+                    <defs>
+                        <radialGradient id="modir-grad" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" style="stop-color:#500000;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#000000;stop-opacity:1" />
+                        </radialGradient>
+                    </defs>
+                    <circle cx="100" cy="100" r="80" fill="url(#modir-grad)" class="animate-spin" style="animation-duration: 20s;" />
+                    <path d="M50 180 L150 180 L140 70 L60 70 Z" fill="#000" stroke="#333" stroke-width="2" />
+                    <rect x="70" y="20" width="60" height="60" fill="#FCA5A5" rx="5" />
+                    <path d="M70 20 Q100 0 130 20" fill="#000" />
+                    <rect x="75" y="40" width="50" height="10" fill="#000" />
+                    <circle cx="85" cy="45" r="2" fill="red" />
+                    <circle cx="115" cy="45" r="2" fill="red" />
+                    <path d="M90 60 Q100 50 110 60" stroke="black" stroke-width="2" fill="none" />
+                    <text x="100" y="195" text-anchor="middle" fill="#ff0000" font-family="monospace" font-size="14" font-weight="bold">THE MANAGER</text>
+                </svg>`
+            };
+        }
+
+        let currentChapter = 1;
+        let dialogueQueue = [];
+        let currentDialogueIndex = 0;
+        let isTyping = false;
+        let battleTurn = 'player';
+        let enemies = []; 
+        let mamadHP = 120;
+        let isNightmare = false;
+        let hackerCharges = 3;
+        
+        let battleStats = {
+            usedKotlet: false, killedWithKotlet: false, usedHack: false,
+            usedMercy: false, killedAny: false, killedAll: false
+        };
+
+        // --- Fire Animation Logic ---
+        let fireAnimationId = null;
+        function startFireEffect() {
+            const canvas = document.getElementById('fire-canvas');
+            if (!canvas) return;
+            
+            canvas.classList.remove('hidden');
+            const ctx = canvas.getContext('2d');
+            
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const particles = [];
+            let hue = 0;
+
+            class FireParticle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = canvas.height + Math.random() * 50;
+                    this.size = Math.random() * 40 + 20;
+                    this.speedY = Math.random() * 4 + 2;
+                    this.speedX = (Math.random() - 0.5) * 4;
+                    this.color = `hsl(${hue}, 100%, 50%)`;
+                    this.opacity = 1;
+                }
+
+                update() {
+                    this.y -= this.speedY;
+                    this.x += this.speedX;
+                    if (this.size > 0.5) this.size -= 0.3;
+                    this.opacity -= 0.01;
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.globalAlpha = this.opacity;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            function animate() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                hue = (hue + 1) % 360;
+
+                for (let i = 0; i < 5; i++) {
+                    particles.push(new FireParticle());
+                }
+
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].update();
+                    particles[i].draw();
+
+                    if (particles[i].opacity <= 0 || particles[i].size <= 0.5) {
+                        particles.splice(i, 1);
+                    }
+                }
+
+                fireAnimationId = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        function stopFireEffect() {
+            if (fireAnimationId) {
+                cancelAnimationFrame(fireAnimationId);
+                fireAnimationId = null;
+            }
+            const canvas = document.getElementById('fire-canvas');
+            if (canvas) canvas.classList.add('hidden');
+        }
+
+        function startGame(chapter) {
+            currentChapter = chapter;
+            isNightmare = (chapter === 3 || chapter === 4 || chapter === 6);
+            hackerCharges = 3;
+            
+            battleStats = {
+                usedKotlet: false, killedWithKotlet: false, usedHack: false,
+                usedMercy: false, killedAny: false, killedAll: false
+            };
+            
+            document.getElementById('scene-menu').classList.add('hidden');
+            
+            // Weird Route Logic
+            if (chapter === 7) {
+                startWeirdRoute();
+                return;
+            }
+
+            // Block expired events
+            if (chapter === 5 || chapter === 6) {
+                showExpiredInfo(chapter === 5 ? 'rubika' : 'salar');
+                document.getElementById('scene-menu').classList.remove('hidden');
+                return;
+            }
+
+            stopFireEffect();
+            document.getElementById('scene-dialogue').classList.remove('hidden');
+            
+            const dialogueBg = document.getElementById('dialogue-bg');
+            const battleBg = document.getElementById('battle-bg');
+            const hackerBtn = document.getElementById('hacker-btn');
+            hackerBtn.classList.add('hidden'); 
+
+            if (chapter === 1) {
+                dialogueBg.style.background = "linear-gradient(to bottom, #1e1b4b, #312e81)";
+                battleBg.style.background = "repeating-linear-gradient(45deg, #1e1b4b, #1e1b4b 10px, #312e81 10px, #312e81 20px)";
+                setupChapter1();
+            } else if (chapter === 3) {
+                dialogueBg.style.background = "linear-gradient(to bottom, #2a0a0a, #450a0a)";
+                battleBg.style.background = "radial-gradient(circle, #450a0a 0%, #000 100%)";
+                setupNightmare();
+            } else if (chapter === 4) {
+                dialogueBg.style.background = "linear-gradient(to bottom, #1a1a1a, #000)";
+                battleBg.style.background = "repeating-linear-gradient(90deg, #111, #111 20px, #222 20px, #222 40px)";
+                setupClownChapter();
+                hackerBtn.classList.remove('hidden'); 
+            } else {
+                dialogueBg.style.background = "linear-gradient(to bottom, #000000, #1a1a1a)";
+                battleBg.style.background = "radial-gradient(circle at center, #333 0%, #000 100%)";
+                setupChapter2();
+            }
+            showDialogue();
+        }
+
+        // --- Weird Route Logic ---
+        function startWeirdRoute() {
+            document.getElementById('scene-dialogue').classList.remove('hidden');
+            const dialogueBg = document.getElementById('dialogue-bg');
+            const battleBg = document.getElementById('battle-bg');
+            
+            startFireEffect();
+            
+            dialogueBg.style.background = "transparent";
+            battleBg.style.background = "transparent";
+
+            dialogueQueue = [
+                { speaker: "Narrator", text: "ممد وارد دفتر مدیریت شد. در قفل بود..." },
+                { speaker: "Mamad", text: "آقا مدیر؟ من اومدم کارنامه‌مو بگیرم." },
+                { speaker: "Modir", text: "کارنامه؟ تو اصلا نمره‌ای نداری ممد..." },
+                { speaker: "Modir", text: "تو فقط بلدی کتلت بخوری و فرار کنی!" },
+                { speaker: "Mamad", text: "این حرفا چیه میزنید آقا؟ من شاگرد اولم!" },
+                { speaker: "System", text: "مدیر خشمگین شد!", action: "battle", type: "boss", enemy: "modir" }
+            ];
+            showDialogue();
+        }
+
+        function setupChapter1() {
+            dialogueQueue = [
+                { speaker: "Narrator", text: "ممد، اصغر و غلام داشتن یواشکی از دیوار مدرسه میرفتن بیرون..." },
+                { speaker: "Mamad", text: "بچه‌ها سریع باشید! من بوی کباب حس میکنم!" },
+                { speaker: "Asghar", text: "صبر کن ببینم... اون سایه چیه؟" },
+                { speaker: "Gholam", text: "وای بدوئید! ناظمه!" },
+                { speaker: "Nazem", text: "های های های! کجا میرید پسرا؟ برگردید اینجا!" },
+                { speaker: "System", text: "ناظم حمله کرد!", action: "battle", type: "single", enemy: "nazem" }
+            ];
+        }
+
+        function setupNightmare() {
+            dialogueQueue = [
+                { speaker: "Narrator", text: "هوا تاریک شده... انگار چیزی درست نیست." },
+                { speaker: "Mamad", text: "بچه‌ها چرا انقدر سرد شد؟" },
+                { speaker: "Asghar", text: "من... من میترسم ممد." },
+                { speaker: "Gholam", text: "اون کیه؟ چرا اینقدر ترسناکه؟" },
+                { speaker: "Moallem", text: "تکالیفتون رو انجام ندادید..." },
+                { speaker: "Moallem", text: "حالا باید تا صبح تو مدرسه بمونید!" },
+                { speaker: "System", text: "معلم کابوس ظاهر شد!", action: "battle", type: "boss", enemy: "moallem" }
+            ];
+        }
+
+        function setupClownChapter() {
+            dialogueQueue = [
+                { speaker: "Narrator", text: "بچه‌ها به سیرک متروکه رسیدن..." },
+                { speaker: "Mamad", text: "اینجا چرا بوی پاپ‌کورن گندیده میاد؟" },
+                { speaker: "Asghar", text: "یه صدای خنده عجیب میشنوید؟" },
+                { speaker: "Clown", text: "ها ها ها! خوش اومدید به نمایش من!" },
+                { speaker: "Clown", text: "امشب شمایید که میخندونید!" },
+                { speaker: "System", text: "دلقک کابوس حمله کرد!", action: "battle", type: "boss", enemy: "clown" }
+            ];
+        }
+
+        function setupChapter2() {
+            dialogueQueue = [
+                { speaker: "Narrator", text: "شب شده بود. ممد و بچه‌ها داشتن از کوچه پس‌کوچه‌های تاریک برمی‌گشتن..." },
+                { speaker: "Mamad", text: "چراغ این کوچه خاموشه. ترسناکه بچه‌ها." },
+                { speaker: "Asghar", text: "نترس بابا، من هستم. اصغرِ شجاع!" },
+                { speaker: "Gholam", text: "صدای پا میاد... یکی داره میاد سمت ما." },
+                { speaker: "Dozd1", text: "هی پسرا! پول‌هاتون رو بدید بیاید!" },
+                { speaker: "System", text: "دزدها حمله کردن!", action: "battle", type: "double", enemy: "dozd" }
+            ];
+        }
+
+        function showDialogue() {
+            if (currentDialogueIndex >= dialogueQueue.length) return;
+            const line = dialogueQueue[currentDialogueIndex];
+            const speakerEl = document.getElementById('speaker-name');
+            const textEl = document.getElementById('dialogue-text');
+            const stageEl = document.getElementById('characters-stage');
+            const currentAssets = getAssets(); 
+
+            if (line.speaker) {
+                speakerEl.textContent = line.speaker.toUpperCase();
+                speakerEl.classList.remove('hidden');
+                if(line.speaker === "Mamad") speakerEl.className = "absolute -top-5 right-8 bg-blue-600 text-white px-4 py-1 font-bold rounded text-xl border-2 border-white";
+                else if(line.speaker === "Asghar") speakerEl.className = "absolute -top-5 right-8 bg-purple-600 text-white px-4 py-1 font-bold rounded text-xl border-2 border-white";
+                else if(line.speaker === "Gholam") speakerEl.className = "absolute -top-5 right-8 bg-green-600 text-white px-4 py-1 font-bold rounded text-xl border-2 border-white";
+                else if(line.speaker.includes("Dozd")) speakerEl.className = "absolute -top-5 right-8 bg-gray-600 text-white px-4 py-1 font-bold rounded text-xl border-2 border-white";
+                else if(line.speaker === "Nazem") speakerEl.className = "absolute -top-5 right-8 bg-red-700 text-white px-4 py-1 font-bold rounded text-xl border-2 border-white";
+                else if(line.speaker === "Moallem") speakerEl.className = "absolute -top-5 right-8 bg-black text-red-600 px-4 py-1 font-bold rounded text-xl border-2 border-red-600 animate-pulse";
+                else if(line.speaker === "Clown") speakerEl.className = "absolute -top-5 right-8 bg-yellow-500 text-black px-4 py-1 font-bold rounded text-xl border-2 border-purple-600";
+                else if(line.speaker === "Modir") speakerEl.className = "absolute -top-5 right-8 bg-black text-red-500 px-4 py-1 font-bold rounded text-xl border-2 border-red-500 glitch-text";
+                else speakerEl.className = "absolute -top-5 right-8 bg-yellow-400 text-black px-4 py-1 font-bold rounded text-xl border-2 border-white";
+            } else {
+                speakerEl.classList.add('hidden');
+            }
+
+            stageEl.innerHTML = '';
+            if (line.speaker === "Mamad" || line.speaker === "Narrator") stageEl.innerHTML += `<div class="transform scale-110 transition-all duration-500">${currentAssets.mamad}</div>`;
+            if (line.speaker === "Asghar") stageEl.innerHTML += `<div class="transform scale-110 transition-all duration-500">${currentAssets.asghar}</div>`;
+            if (line.speaker === "Gholam") stageEl.innerHTML += `<div class="transform scale-110 transition-all duration-500">${currentAssets.gholam}</div>`;
+            if (line.speaker === "Nazem") stageEl.innerHTML = `<div class="transform scale-125 transition-all duration-500">${currentAssets.nazem}</div>`;
+            if (line.speaker === "Moallem") stageEl.innerHTML = `<div class="transform scale-150 transition-all duration-500">${currentAssets.moallem}</div>`;
+            if (line.speaker === "Clown") stageEl.innerHTML = `<div class="transform scale-150 transition-all duration-500">${currentAssets.clown}</div>`;
+            if (line.speaker === "Modir") stageEl.innerHTML = `<div class="transform scale-150 transition-all duration-500">${currentAssets.modir}</div>`;
+            if (line.speaker === "Dozd1") {
+                 stageEl.innerHTML = `<div class="transform scale-100 transition-all duration-500">${currentAssets.dozd}</div><div class="transform scale-100 transition-all duration-500">${currentAssets.dozd}</div>`;
+            }
+            if (line.speaker === "Narrator" && !stageEl.innerHTML && currentChapter !== 7) {
+                 stageEl.innerHTML = `<div class="transform scale-75">${currentAssets.mamad}</div><div class="transform scale-75">${currentAssets.asghar}</div><div class="transform scale-75">${currentAssets.gholam}</div>`;
+            }
+
+            textEl.textContent = "";
+            isTyping = true;
+            let i = 0;
+            function typeWriter() {
+                if (i < line.text.length) {
+                    textEl.textContent += line.text.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 30); 
+                } else {
+                    isTyping = false;
+                    if (line.action === "battle") {
+                        setTimeout(() => startBattle(line.type, line.enemy), 1500);
+                    }
+                }
+            }
+            typeWriter();
+        }
+
+        function skipDialogue() {
+            if (isTyping) {
+                const line = dialogueQueue[currentDialogueIndex];
+                document.getElementById('dialogue-text').textContent = line.text;
+                isTyping = false;
+                if (line.action === "battle") {
+                    setTimeout(() => startBattle(line.type, line.enemy), 500);
+                }
+            } else {
+                currentDialogueIndex++;
+                if (currentDialogueIndex < dialogueQueue.length) showDialogue();
+            }
+        }
+
+        document.getElementById('scene-dialogue').addEventListener('click', (e) => {
+            if (e.target.closest('button')) return;
+            if (!isTyping) {
+                currentDialogueIndex++;
+                if (currentDialogueIndex < dialogueQueue.length) showDialogue();
+            }
+        });
+
+        function startBattle(type, enemyType) {
+            document.getElementById('scene-dialogue').classList.add('hidden');
+            document.getElementById('scene-battle').classList.remove('hidden');
+            const container = document.getElementById('enemy-container');
+            container.innerHTML = '';
+            enemies = [];
+            const currentAssets = getAssets();
+
+            // Hide other party members in Weird Route
+            const partyStats = document.querySelector('#scene-battle .flex.justify-between');
+            if (currentChapter === 7) {
+                partyStats.parentElement.innerHTML = `
+                    <div class="text-right w-full">
+                        <p class="font-bold text-red-500 text-lg glitch-text">MAMAD (SOLO)</p>
+                        <div class="w-full h-3 bg-gray-600 mt-1"><div id="mamad-hp-bar" class="h-full bg-red-500 w-[100%] transition-all"></div></div>
+                        <p class="text-xs mt-1">HP <span id="mamad-hp-text">100</span>/100</p>
+                    </div>
+                `;
+                mamadHP = 100;
+            } else {
+                 // Ensure standard layout is restored if needed, but HTML structure is static now.
+            }
+
+            if (type === 'single') {
+                enemies.push({ id: 'e1', hp: 100, maxHp: 100, name: 'NAZEM' });
+                container.innerHTML = `<div id="enemy-e1" class="flex flex-col items-center"><div class="w-64 h-64 char-sprite transition-transform">${currentAssets.nazem}</div><div class="w-48 h-3 bg-gray-700 mt-2 rounded border border-white"><div id="hp-e1" class="h-full bg-green-500 w-full transition-all"></div></div></div>`;
+            } else if (type === 'boss') {
+                if (enemyType === 'moallem') {
+                    enemies.push({ id: 'e1', hp: 300, maxHp: 300, name: 'MOALLEM' });
+                    container.innerHTML = `<div id="enemy-e1" class="flex flex-col items-center"><div class="w-72 h-72 char-sprite transition-transform">${currentAssets.moallem}</div><div class="w-64 h-4 bg-gray-700 mt-2 rounded border border-red-500"><div id="hp-e1" class="h-full bg-red-600 w-full transition-all"></div></div></div>`;
+                } else if (enemyType === 'clown') {
+                    enemies.push({ id: 'e1', hp: 500, maxHp: 500, name: 'DOLOKE KABUS' });
+                    container.innerHTML = `<div id="enemy-e1" class="flex flex-col items-center"><div class="w-72 h-72 char-sprite transition-transform">${currentAssets.clown}</div><div class="w-64 h-4 bg-gray-700 mt-2 rounded border border-yellow-500"><div id="hp-e1" class="h-full bg-yellow-500 w-full transition-all"></div></div></div>`;
+                } else if (enemyType === 'modir') {
+                    enemies.push({ id: 'e1', hp: 800, maxHp: 800, name: 'THE MANAGER' });
+                    container.innerHTML = `<div id="enemy-e1" class="flex flex-col items-center"><div class="w-72 h-72 char-sprite transition-transform">${currentAssets.modir}</div><div class="w-64 h-4 bg-gray-700 mt-2 rounded border border-red-500"><div id="hp-e1" class="h-full bg-red-600 w-full transition-all"></div></div></div>`;
+                }
+            } else {
+                enemies.push({ id: 'e1', hp: 60, maxHp: 60, name: 'DOZD 1' });
+                enemies.push({ id: 'e2', hp: 60, maxHp: 60, name: 'DOZD 2' });
+                container.innerHTML = `
+                    <div id="enemy-e1" class="flex flex-col items-center animate-pulse"><div class="w-40 h-40 char-sprite transition-transform">${currentAssets.dozd}</div><div class="w-32 h-2 bg-gray-700 mt-2 rounded border border-white"><div id="hp-e1" class="h-full bg-green-500 w-full transition-all"></div></div><p class="text-sm mt-1 text-gray-300">DOZD 1</p></div>
+                    <div id="enemy-e2" class="flex flex-col items-center animate-pulse"><div class="w-40 h-40 char-sprite transition-transform">${currentAssets.dozd}</div><div class="w-32 h-2 bg-gray-700 mt-2 rounded border border-white"><div id="hp-e2" class="h-full bg-green-500 w-full transition-all"></div></div><p class="text-sm mt-1 text-gray-300">DOZD 2</p></div>
+                `;
+            }
+            
+            if (currentChapter === 7) updateBattleText("مدیر: نمره‌ت صفره ممد!");
+            else if (currentChapter === 4) updateBattleText("دلقک: هیچ دفاعی کار نمیکنه! ها ها ها!");
+            else if (isNightmare) updateBattleText("معلم کابوس: هیچ دفاعی کار نداره!");
+            else updateBattleText(currentChapter === 1 ? "ناظم با خط‌کش حمله میکنه!" : "دزدها چاقو کشیدن!");
+        }
+
+        function selectAction(actionType) {
+            if (battleTurn !== 'player') return;
+            const subMenu = document.getElementById('sub-menu');
+            const list = document.getElementById('sub-menu-list');
+            list.innerHTML = '';
+            subMenu.classList.remove('hidden');
+
+            if (actionType === 'FIGHT') {
+                list.innerHTML = `
+                    <li onclick="executeMove('slash')" class="cursor-pointer hover:text-yellow-400 p-2 border-b border-gray-800">🗡️ پرتاب دمپایی (Weak)</li>
+                    <li onclick="executeMove('kotlet')" class="cursor-pointer hover:text-yellow-400 p-2 border-b border-gray-800">🍖 پرتاب کتلت داغ (Strong)</li>
+                    <li onclick="executeMove('slap')" class="cursor-pointer hover:text-yellow-400 p-2 border-b border-gray-800">👋 هل دادن (Medium)</li>
+                `;
+            } else if (actionType === 'ACT') {
+                if (currentChapter === 7) {
+                     list.innerHTML = `
+                        <li onclick="executeMove('accept')" class="cursor-pointer hover:text-red-400 p-2 border-b border-gray-800">🔥 پذیرش تاریکی</li>
+                        <li onclick="executeMove('resist')" class="cursor-pointer hover:text-blue-400 p-2 border-b border-gray-800">🛡️ مقاومت کردن</li>
+                    `;
+                } else if (currentChapter === 4) {
+                    list.innerHTML = `<li onclick="executeMove('laugh')" class="cursor-pointer hover:text-pink-400 p-2 border-b border-gray-800">😂 خندیدن به جوکاش</li><li onclick="executeMove('ignore')" class="cursor-pointer hover:text-pink-400 p-2 border-b border-gray-800">😐 نادیده گرفتن</li>`;
+                } else if (isNightmare && currentChapter === 3) {
+                    list.innerHTML = `<li onclick="executeMove('cry')" class="cursor-pointer hover:text-pink-400 p-2 border-b border-gray-800">😭 گریه کردن</li><li onclick="executeMove('pray')" class="cursor-pointer hover:text-pink-400 p-2 border-b border-gray-800">🙏 دعا کردن</li>`;
+                } else if (currentChapter === 1) {
+                    list.innerHTML = `<li onclick="executeMove('insult')" class="cursor-pointer hover:text-pink-400 p-2 border-b border-gray-800">😤 گفتن: عینکت کجه!</li><li onclick="executeMove('flirt')" class="cursor-pointer hover:text-pink-400 p-2 border-b border-gray-800">😍 تعریف از سبیل</li>`;
+                } else {
+                    list.innerHTML = `<li onclick="executeMove('insult')" class="cursor-pointer hover:text-pink-400 p-2 border-b border-gray-800">😤 مسخره کردن قیافه</li><li onclick="executeMove('bribe')" class="cursor-pointer hover:text-pink-400 p-2 border-b border-gray-800">💰 پیشنهاد رشوه</li>`;
+                }
+            } else if (actionType === 'ITEM') {
+                list.innerHTML = `<li onclick="executeMove('heal')" class="cursor-pointer hover:text-green-400 p-2 border-b border-gray-800">🥪 ساندویچ کالباس (Heal 30)</li><li onclick="executeMove('tea')" class="cursor-pointer hover:text-green-400 p-2 border-b border-gray-800">🍵 نوشابه مشکی (Heal All)</li>`;
+            } else if (actionType === 'MERCY') {
+                list.innerHTML = `<li onclick="executeMove('spare')" class="cursor-pointer hover:text-blue-400 p-2 border-b border-gray-800">🕊️ در امان گذاشتن</li>`;
+            }
+        }
+
+        function activateHackerMode() {
+            if (hackerCharges > 0 && battleTurn === 'player') {
+                hackerCharges--;
+                document.getElementById('hack-count').textContent = hackerCharges;
+                battleStats.usedHack = true;
+                document.body.style.filter = "invert(1) hue-rotate(180deg)";
+                setTimeout(() => document.body.style.filter = "none", 200);
+                const enemy = enemies[0];
+                if (enemy) {
+                    const hackDamage = 100;
+                    enemy.hp -= hackDamage;
+                    const hpBar = document.getElementById(`hp-${enemy.id}`);
+                    if (hpBar) hpBar.style.width = Math.max(0, (enemy.hp / enemy.maxHp) * 100) + '%';
+                    updateBattleText(`SYSTEM HACKED! ${hackDamage} DAMAGE TO ${enemy.name}!`);
+                    if (enemy.hp <= 0) {
+                        document.getElementById(`enemy-${enemy.id}`).style.opacity = '0.2';
+                        battleStats.killedAny = true;
+                        setTimeout(victory, 1500);
+                    }
+                }
+                if (hackerCharges <= 0) document.getElementById('hacker-btn').classList.add('hidden');
+            }
+        }
+
+        function executeMove(move) {
+            document.getElementById('sub-menu').classList.add('hidden');
+            battleTurn = 'animation';
+            let text = "";
+            let damage = 0;
+            
+            const aliveEnemies = enemies.filter(e => e.hp > 0);
+            if (aliveEnemies.length === 0) { victory(); return; }
+
+            let targetId = aliveEnemies[0].id; 
+            if (aliveEnemies.length > 1 && move !== 'heal' && move !== 'tea') {
+                const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+                targetId = randomEnemy.id;
+            }
+
+            // Animate Player Attack (Move Left)
+            const playerSprites = document.querySelectorAll('.player-side svg');
+            if(playerSprites.length > 0) {
+                playerSprites[0].classList.add('attacking-right');
+                setTimeout(() => playerSprites[0].classList.remove('attacking-right'), 500);
+            }
+
+            switch(move) {
+                case 'slash': text = "اصغر یه دمپایی پرتاب کرد!"; damage = 15; shakeEnemy(targetId); break;
+                case 'kotlet': 
+                    text = "ممد کتلت داغ پرتاب کرد! سوختی! Critical Hit!"; 
+                    damage = 45; 
+                    shakeEnemy(targetId); 
+                    battleStats.usedKotlet = true;
+                    break;
+                case 'slap': text = "غلام هلش داد تو دیوار!"; damage = 25; shakeEnemy(targetId); break;
+                case 'insult': text = currentChapter === 1 ? "ممد گفت: عینکت کجه آقا!" : "اصغر گفت: دزدی شغل شریفی نیست!"; damage = 0; break;
+                case 'flirt': text = "اصغر گفت: چه سبیل پرپشتی! (Nazem blushed)"; damage = 0; break;
+                case 'bribe': text = "ممد گفت: بگیر اینم 5 تومن ول کن برو!"; damage = 0; break;
+                case 'cry': text = "ممد زد زیر گریه... معلم دلش سوخت ولی نه زیاد."; damage = 0; break;
+                case 'pray': text = "غلام دعا کرد... خدا کمک کن!"; damage = 0; break;
+                case 'laugh': text = "بچه‌ها به جوکای دلقک خندیدن. دلقک عصبانی شد!"; damage = 0; break;
+                case 'ignore': text = "به دلقک محل ندادن. دلقک افسرده شد."; damage = 0; break;
+                case 'accept': 
+                    text = "ممد تاریکی رو پذیرفت... قدرت گرفت ولی آسیب دید."; 
+                    damage = 20; 
+                    mamadHP -= 10; 
+                    updateHP();
+                    shakeEnemy(targetId);
+                    break;
+                case 'resist': 
+                    text = "ممد مقاومت کرد! دفاع بالا رفت."; 
+                    damage = 10; 
+                    shakeEnemy(targetId);
+                    break;
+                case 'heal': text = "ممد ساندویچ خورد. HP恢复!"; mamadHP = Math.min(currentChapter === 7 ? 100 : 120, mamadHP + 30); updateHP(); damage = 0; break;
+                case 'tea': text = "همه نوشابه خوردن. حالشون جا اومد!"; mamadHP = currentChapter === 7 ? 100 : 120; updateHP(); damage = 0; break;
+                case 'spare': 
+                    text = "جنگیدن فایده نداره..."; 
+                    damage = 0; 
+                    battleStats.usedMercy = true;
+                    break;
+            }
+
+            if (currentChapter === 7 && damage > 0) {
+                damage = Math.floor(damage * 0.5);
+                text += " (مدیر مقاومه!)";
+            } else if ((isNightmare || currentChapter === 4) && damage > 0) {
+                damage = Math.floor(damage / 2);
+                text += " (دفاع دشمن بالا بود!)";
+            }
+
+            updateBattleText(text);
+            updateHP();
+
+            if (damage > 0) {
+                const enemy = enemies.find(e => e.id === targetId);
+                if (enemy) {
+                    enemy.hp -= damage;
+                    const hpBar = document.getElementById(`hp-${targetId}`);
+                    if (hpBar) hpBar.style.width = Math.max(0, (enemy.hp / enemy.maxHp) * 100) + '%';
+                    
+                    // IMMORTAL MODE TRIGGER FOR MANAGER
+                    if (currentChapter === 7 && enemy.hp <= 0 && !enemy.isImmortal) {
+                        triggerImmortalMode(enemy);
+                        return; // Stop processing damage
+                    }
+
+                    if (enemy.hp <= 0) {
+                        document.getElementById(`enemy-${targetId}`).style.opacity = '0.2';
+                        document.getElementById(`enemy-${targetId}`).style.filter = 'grayscale(100%)';
+                        battleStats.killedAny = true;
+                        if (move === 'kotlet') battleStats.killedWithKotlet = true;
+                    }
+                }
+                if (enemies.every(e => e.hp <= 0)) {
+                    battleStats.killedAll = true;
+                    setTimeout(victory, 1500);
+                    return;
+                }
+            }
+
+            if (move === 'spare' && !battleStats.killedAny) {
+                setTimeout(() => {
+                    battleStats.killedAll = false;
+                    victory();
+                }, 1500);
+                return;
+            }
+
+            // Start Dodge Mini-Game before Enemy Turn
+            startDodgeMiniGame();
+        }
+
+        // --- DODGE MINI-GAME LOGIC ---
+        let dodgeAngle = 0;
+        let dodgeSpeed = 0.5; // Initial slow speed
+        let dodgeTimer = null;
+        let dodgeTimeLeft = 5000; // 5 seconds
+        let lastFrameTime = 0;
+        let isDodging = false;
+
+        function startDodgeMiniGame() {
+            isDodging = true;
+            const overlay = document.getElementById('dodge-overlay');
+            const btn = document.getElementById('dodge-btn');
+            const track = document.getElementById('dodge-track');
+            const timerFill = document.getElementById('dodge-timer-fill');
+            
+            overlay.style.display = 'flex';
+            dodgeAngle = 0;
+            dodgeSpeed = 0.5; // Degrees per frame approx
+            dodgeTimeLeft = 5000;
+            lastFrameTime = performance.now();
+
+            // Reset Button Position
+            updateDodgeButtonPosition();
+
+            // Timer Loop
+            const timerInterval = setInterval(() => {
+                if (!isDodging) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                dodgeTimeLeft -= 100;
+                const pct = (dodgeTimeLeft / 5000) * 100;
+                timerFill.style.width = `${pct}%`;
+
+                if (dodgeTimeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    failDodge();
+                }
+            }, 100);
+
+            // Animation Loop
+            function animateDodge(time) {
+                if (!isDodging) return;
+                
+                const deltaTime = time - lastFrameTime;
+                lastFrameTime = time;
+
+                // Increase speed over time
+                dodgeSpeed += 0.005; 
+
+                dodgeAngle = (dodgeAngle + dodgeSpeed) % 360;
+                updateDodgeButtonPosition();
+
+                requestAnimationFrame(animateDodge);
+            }
+            requestAnimationFrame(animateDodge);
+
+            // Click Handler
+            btn.onclick = () => {
+                if (!isDodging) return;
+                successDodge();
+                clearInterval(timerInterval);
+            };
+        }
+
+        function updateDodgeButtonPosition() {
+            const btn = document.getElementById('dodge-btn');
+            const radius = 150; // Half of track width
+            const rad = dodgeAngle * (Math.PI / 180);
+            
+            // Calculate position on circle
+            const x = Math.cos(rad) * radius;
+            const y = Math.sin(rad) * radius;
+
+            // Apply transform (center is 0,0 due to translate(-50%, -50%) in CSS)
+            btn.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+        }
+
+        function successDodge() {
+            isDodging = false;
+            document.getElementById('dodge-overlay').style.display = 'none';
+            updateBattleText("جاخالی دادی! (Miss)");
+            setTimeout(() => {
+                battleTurn = 'player';
+            }, 1000);
+        }
+
+        function failDodge() {
+            isDodging = false;
+            document.getElementById('dodge-overlay').style.display = 'none';
+            updateBattleText("نتونستی جاخالی بدی!");
+            
+            // Execute Enemy Damage
+            const attacker = enemies.find(e => e.hp > 0);
+            if (attacker) {
+                let dmg = Math.floor(Math.random() * 20) + 10;
+                if (currentChapter === 7) {
+                    dmg = Math.floor(dmg * 2);
+                    if (attacker.isImmortal) dmg *= 2;
+                } else if (isNightmare || currentChapter === 4) {
+                    dmg *= 2;
+                }
+                
+                mamadHP -= dmg;
+                updateHP();
+                updateBattleText(`${attacker.name} زد به ممد! ${dmg} Damage!`);
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 500);
+                
+                if (mamadHP <= 0) {
+                    updateBattleText("ممد بیهوش شد... (Game Over)");
+                    setTimeout(() => location.reload(), 3000);
+                    return;
+                }
+            }
+            battleTurn = 'player';
+        }
+
+
+        function triggerImmortalMode(enemy) {
+            enemy.isImmortal = true;
+            enemy.hp = enemy.maxHp; // Full Heal
+            
+            const hpBar = document.getElementById(`hp-${enemy.id}`);
+            if (hpBar) hpBar.style.width = '100%';
+
+            const spriteContainer = document.getElementById(`enemy-${enemy.id}`);
+            const sprite = spriteContainer.querySelector('.char-sprite');
+            
+            // Add Immortal Class
+            sprite.classList.add('immortal-mode');
+            
+            updateBattleText("مدیر: حالت نامیرا فعال شد! من خدای این مدرسه‌ام!");
+            
+            // Change Text Color to Gold/Red
+            document.getElementById('battle-text').style.color = "#FFD700";
+            document.getElementById('battle-text').style.textShadow = "0 0 10px red";
+
+            setTimeout(() => {
+                updateBattleText("مدیر: حالا نوبت منه که درس بدم!");
+                setTimeout(startDodgeMiniGame, 1500); // Trigger dodge instead of direct damage
+            }, 2000);
+        }
+
+        function updateHP() {
+            const max = currentChapter === 7 ? 100 : 120;
+            const pct = (mamadHP / max) * 100;
+            document.getElementById('mamad-hp-bar').style.width = Math.max(0, pct) + '%';
+            document.getElementById('mamad-hp-text').textContent = Math.max(0, mamadHP);
+        }
+
+        function updateBattleText(msg) {
+            const el = document.getElementById('battle-text');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 2500);
+        }
+
+        function shakeEnemy(id) {
+            const sprite = document.querySelector(`#enemy-${id} .char-sprite`);
+            if (sprite) {
+                sprite.style.transform = "translateX(10px) rotate(5deg)";
+                setTimeout(() => sprite.style.transform = "translateX(-10px) rotate(-5deg)", 100);
+                setTimeout(() => sprite.style.transform = "translateX(0) rotate(0)", 200);
+            }
+        }
+
+        function victory() {
+            stopFireEffect();
+            document.getElementById('scene-battle').classList.add('hidden');
+            document.getElementById('scene-victory').classList.remove('hidden');
+            
+            let endingText = '';
+            if (currentChapter === 7) endingText = "ممد مدیر رو شکست داد و مدرسه رو تصاحب کرد!";
+            else if (currentChapter === 4) endingText = "دلقک رو شکست دادید!";
+            else if (isNightmare && currentChapter === 3) endingText = "شما کابوس معلم رو شکست دادید!";
+            else if (currentChapter === 1) endingText = "ناظم رو پتو کردید!";
+            else endingText = "دزدها فرار کردن!";
+            
+            document.getElementById('victory-text').textContent = endingText;
+
+            const rewards = handleVictoryRewards(battleStats);
+            
+            let endingName = '';
+            if (currentChapter === 7) {
+                endingName = '🔥 پایان عجیب: مدیر جدید';
+            } else if (battleStats.usedMercy && !battleStats.killedAny) {
+                endingName = '🕊️ پایان صلح‌طلبانه';
+            } else if (battleStats.usedHack) {
+                endingName = '💻 پایان مخفی: هکر';
+            } else if (battleStats.killedAll && battleStats.killedAny) {
+                endingName = '💀 پایان نسل‌کشی';
+            } else {
+                endingName = '✨ پایان معمولی';
+            }
+            document.getElementById('ending-name').textContent = endingName;
+            
+            showNewRewards(rewards);
+        }
+
+        // Initialize
+        loadProgress();
+    </script>
+</body>
+</html>
